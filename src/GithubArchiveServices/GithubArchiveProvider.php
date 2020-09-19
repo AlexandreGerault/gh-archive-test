@@ -39,7 +39,7 @@ class GithubArchiveProvider implements GithubArchiveProviderInterface
      *
      * @param DateTimeInterface $date The day we want to get the data from
      * @param int $hour
-     * @return array<string> all json string entries
+     * @return array<object> all json entries as objects
      * @throws ClientExceptionInterface
      * @throws RedirectionExceptionInterface
      * @throws ServerExceptionInterface
@@ -53,7 +53,10 @@ class GithubArchiveProvider implements GithubArchiveProviderInterface
             $this->download($date, $hour);
         }
 
-        return explode("\n", $this->load($filename));
+        return array_map(
+            fn($item) => json_decode($item),
+            explode("\n", $this->load($filename))
+        );
     }
 
     /**

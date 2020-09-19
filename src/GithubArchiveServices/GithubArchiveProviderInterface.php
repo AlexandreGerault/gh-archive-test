@@ -11,7 +11,7 @@ interface GithubArchiveProviderInterface
      *
      * @param DateTimeInterface $date
      * @param int $hour
-     * @return array<string> Json entries as string
+     * @return array<object> Json entries as objects
      */
     public function getArchive(DateTimeInterface $date, int $hour): array;
 }
