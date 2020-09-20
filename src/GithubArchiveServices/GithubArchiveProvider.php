@@ -19,7 +19,7 @@ class GithubArchiveProvider implements GithubArchiveProviderInterface
 
     private const GH_ARCHIVE_BASE_URL = 'https://data.gharchive.org/';
     private const FILE_DIR = 'uploads/gh-archives/';
-    private const FILE_DATE_FORMAT = 'Y-m-d'; // Year - Month - Day
+    private const FILE_DATE_FORMAT = 'Y-m-d';
 
     /**
      * ArchiveProvider constructor.
@@ -49,14 +49,30 @@ class GithubArchiveProvider implements GithubArchiveProviderInterface
     {
         $filename = $this->getFilenameFrom($date, $hour);
 
-        if (! $this->filesystem->exists(self::FILE_DIR . $filename)) {
+        if (!$this->filesystem->exists(self::FILE_DIR . $filename)) {
             $this->download($date, $hour);
         }
 
-        return array_map(
-            fn($item) => json_decode($item),
-            explode("\n", $this->load($filename))
+        return array_filter(
+            array_map(
+                fn($item) => json_decode($item),
+                explode("\n", $this->load($filename))
+            ),
+            fn($e) => $e !== null
         );
+    }
+
+    /**
+     * Helper function to generate filename.
+     * Format: YYYY-MM-DD-HH.json.gz
+     *
+     * @param DateTimeInterface $date
+     * @param int $hour
+     * @return string
+     */
+    private function getFilenameFrom(DateTimeInterface $date, int $hour)
+    {
+        return $date->format(self::FILE_DATE_FORMAT) . "-" . $hour . ".json.gz";
     }
 
     /**
@@ -97,18 +113,5 @@ class GithubArchiveProvider implements GithubArchiveProviderInterface
         }
         // Else throw error
         throw new RuntimeException("Error loading file ${filename}...");
-    }
-
-    /**
-     * Helper function to generate filename.
-     * Format: YYYY-MM-DD-HH.json.gz
-     *
-     * @param DateTimeInterface $date
-     * @param int $hour
-     * @return string
-     */
-    private function getFilenameFrom(DateTimeInterface $date, int $hour)
-    {
-        return $date->format(self::FILE_DATE_FORMAT) . "-" . $hour . ".json.gz";
     }
 }
