@@ -2,15 +2,12 @@
 
 namespace App\GithubArchiveServices;
 
-use App\Entity\Actor;
-use App\Entity\Event;
-use App\Entity\Repo;
 use DateTime;
+use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManagerInterface;
 
 class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
 {
-    private const GITHUB_EVENT_DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
     private EntityManagerInterface $em;
 
     /**
@@ -24,55 +21,75 @@ class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
     }
 
     /**
-     * Persist all the
+     * Persist all the events. Do not duplicate entities.
      *
      * @param array $events
+     * @throws DBALException
      */
     public function import(array &$events): void
     {
-        $i = 1;
-        $batchSize = 200;
+        $eventStatement = $this->em->getConnection()->prepare(<<<SQL
+INSERT INTO event (id, type, public, created_at, payload)
+VALUES (:id, :type, :public, :created_at, :payload)
+ON DUPLICATE KEY UPDATE `id`=:id
+SQL);
+        $actorStatement = $this->em->getConnection()->prepare(<<<SQL
+INSERT INTO actor (id, event_id, login, gravatar_id, url, avatar_url)
+VALUES (:id, :event_id, :login, :gravatar_id, :url, :avatar_url)
+ON DUPLICATE KEY UPDATE `id`=:id
+SQL);
+        $repoStatement = $this->em->getConnection()->prepare(<<<SQL
+INSERT INTO repo (id, event_id, name, url)
+VALUES (:id, :event_id, :name, :url)
+ON DUPLICATE KEY UPDATE `id`=:id
+SQL);
+        $orgStatement = $this->em->getConnection()->prepare(<<<SQL
+INSERT INTO organization (id, event_id, login, gravatar_id, url, avatar_url)
+VALUES (:id, :event_id, :login, :gravatar_id, :url, :avatar_url)
+ON DUPLICATE KEY UPDATE `id`=:id
+SQL);
+
         foreach ($events as $event) {
-            $dbEvent = (new Event())
-                ->setType($event->type)
-                ->setPayload(json_decode(json_encode($event->payload), true))
-                ->setPublic($event->public)
-                ->setCreatedAt(
-                    DateTime::createFromFormat(
-                        self::GITHUB_EVENT_DATETIME_FORMAT,
-                        $event->created_at
-                    )
-                )
-            ;
-            $this->em->persist($dbEvent);
+            // Insert event first
+            $public = $event->public ? "1" : "0";
+            $created_at = DateTime::createFromFormat(
+                'Y-m-d\TH:i:s\Z',
+                $event->created_at
+            )->format('Y-m-d H:i:s');
+            $payload = json_encode($event->payload);
+            $eventStatement->bindParam(':id', $event->id);
+            $eventStatement->bindParam(':type', $event->type);
+            $eventStatement->bindParam(':public', $public);
+            $eventStatement->bindParam(':created_at', $created_at);
+            $eventStatement->bindParam(':payload', $payload);
+            $eventStatement->execute();
 
-            $actor = (new Actor())
-                ->setLogin($event->actor->login)
-                ->setGravatarId(
-                    $event->actor->gravatar_id !== "" ? $event->actor->gravatar_id : null
-                )
-                ->setUrl($event->actor->url)
-                ->setAvatarUrl($event->actor->avatar_url)
-                ->setEvent($dbEvent)
-            ;
-            $this->em->persist($actor);
+            // Then insert relations
+            $actorGravatar = $event->actor->gravatar_id === '' ? 0 : (int) $event->actor->gravatar_id;
+            $actorStatement->bindParam(':id', $event->actor->id);
+            $actorStatement->bindParam(':event_id', $event->id);
+            $actorStatement->bindParam(':login', $event->actor->login);
+            $actorStatement->bindParam(':gravatar_id', $actorGravatar);
+            $actorStatement->bindParam(':url', $event->actor->url);
+            $actorStatement->bindParam(':avatar_url', $event->actor->avatar_url);
+            $actorStatement->execute();
 
-            $repo = (new Repo())
-                ->setName($event->repo->name)
-                ->setUrl($event->repo->url)
-                ->setEvent($dbEvent)
-            ;
-            $this->em->persist($repo);
+            $repoStatement->bindParam(':id', $event->repo->id);
+            $repoStatement->bindParam(':event_id', $event->id);
+            $repoStatement->bindParam(':name', $event->repo->name);
+            $repoStatement->bindParam(':url', $event->repo->url);
+            $repoStatement->execute();
 
-            if ($i % $batchSize === 0) {
-                $this->em->flush();
-                $this->em->clear();
+            if (isset($event->org)) {
+                $orgGravatar = $event->org->gravatar_id === '' ? null : (int) $event->org->gravatar_id;
+                $orgStatement->bindParam(':id', $event->org->id);
+                $orgStatement->bindParam(':event_id', $event->id);
+                $orgStatement->bindParam(':login', $event->org->login);
+                $orgStatement->bindParam(':gravatar_id', $orgGravatar);
+                $orgStatement->bindParam(':url', $event->org->url);
+                $orgStatement->bindParam(':avatar_url', $event->org->avatar_url);
+                $orgStatement->execute();
             }
-
-            $i++;
         }
-
-        $this->em->flush();
-        $this->em->clear();
     }
 }
