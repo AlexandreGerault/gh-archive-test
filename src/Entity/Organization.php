@@ -12,8 +12,7 @@ class Organization
 {
     /**
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="bigint")
      */
     private $id;
 
@@ -46,6 +45,14 @@ class Organization
     {
         return $this->id;
     }
+
+    public function setId($id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
 
     public function getLogin(): ?string
     {

@@ -19,32 +19,18 @@ class RepoRepository extends ServiceEntityRepository
         parent::__construct($registry, Repo::class);
     }
 
-    // /**
-    //  * @return Repo[] Returns an array of Repo objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function createFromEventIfNotExists($event): ?Repo
     {
-        return $this->createQueryBuilder('r')
-            ->andWhere('r.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('r.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $r = $this->find($event->repo->id);
 
-    /*
-    public function findOneBySomeField($value): ?Repo
-    {
-        return $this->createQueryBuilder('r')
-            ->andWhere('r.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if (!$r) {
+            return (new Repo())
+                ->setId($event->repo->id)
+                ->setEvent($event->id)
+                ->setUrl($event->repo->url)
+                ->setName($event->repo->name);
+        }
+
+        return null;
     }
-    */
 }
