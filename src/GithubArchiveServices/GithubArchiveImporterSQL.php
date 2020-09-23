@@ -5,6 +5,7 @@ namespace App\GithubArchiveServices;
 
 use App\Repository\ActorRepository;
 use App\Repository\EventRepository;
+use App\Repository\OrganizationRepository;
 use App\Repository\RepoRepository;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +16,7 @@ class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
     private EventRepository $eventRepository;
     private ActorRepository $actorRepository;
     private RepoRepository $repoRepository;
+    private OrganizationRepository $organizationRepository;
 
     /**
      * GithubArchiveImporterSQL constructor.
@@ -22,18 +24,21 @@ class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
      * @param EventRepository $eventRepository
      * @param ActorRepository $actorRepository
      * @param RepoRepository $repoRepository
+     * @param OrganizationRepository $organizationRepository
      */
     public function __construct(
         EntityManagerInterface $em,
         EventRepository $eventRepository,
         ActorRepository $actorRepository,
-        RepoRepository $repoRepository
+        RepoRepository $repoRepository,
+        OrganizationRepository $organizationRepository
     ) {
         $this->em = $em;
         $this->em->getConnection()->getConfiguration()->setSQLLogger(null);
         $this->eventRepository = $eventRepository;
         $this->actorRepository = $actorRepository;
         $this->repoRepository = $repoRepository;
+        $this->organizationRepository = $organizationRepository;
     }
 
     /**
@@ -57,6 +62,13 @@ class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
             $repo = $this->repoRepository->createFromEventIfNotExists($event);
             if ($repo) {
                 $this->em->persist($repo);
+            }
+
+            if (isset($event->org)) {
+                $org = $this->organizationRepository->createFromEventIfNotExists($event);
+                if ($org) {
+                    $this->em->persist($org);
+                }
             }
 
             // Organization missing

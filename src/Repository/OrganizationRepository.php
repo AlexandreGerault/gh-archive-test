@@ -19,32 +19,20 @@ class OrganizationRepository extends ServiceEntityRepository
         parent::__construct($registry, Organization::class);
     }
 
-    // /**
-    //  * @return Organization[] Returns an array of Organization objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function createFromEventIfNotExists($event)
     {
-        return $this->createQueryBuilder('o')
-            ->andWhere('o.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('o.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $o = $this->find($event->actor->id);
 
-    /*
-    public function findOneBySomeField($value): ?Organization
-    {
-        return $this->createQueryBuilder('o')
-            ->andWhere('o.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if (!$o) {
+            return (new Organization())
+                ->setId($event->org->id)
+                ->setLogin($event->org->login)
+                ->setGravatarId($event->org->gravatar_id !== "" ? $event->org->gravatar_id : null)
+                ->setUrl($event->org->url)
+                ->setAvatarUrl($event->org->avatar_url)
+                ->setEvent($event->org->id);
+        }
+
+        return null;
     }
-    */
 }
