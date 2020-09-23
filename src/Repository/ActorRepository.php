@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Actor;
+use App\Entity\Event;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,7 +20,7 @@ class ActorRepository extends ServiceEntityRepository
         parent::__construct($registry, Actor::class);
     }
 
-    public function createFromEventIfNotExists($event): ?Actor
+    public function createFromEventIfNotExists($event, Event $doctrineEvent): ?Actor
     {
         $a = $this->find($event->actor->id);
 
@@ -30,7 +31,7 @@ class ActorRepository extends ServiceEntityRepository
                 ->setGravatarId($event->actor->gravatar_id !== "" ? $event->actor->gravatar_id : null)
                 ->setUrl($event->actor->url)
                 ->setAvatarUrl($event->actor->avatar_url)
-                ->setEvent($event->event->id);
+                ->setEvent($doctrineEvent);
         }
 
         return null;

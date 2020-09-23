@@ -25,6 +25,7 @@
         "symfony/yaml": "5.1.*"
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^6.3"
     },
     "config": {
         "optimize-autoloader": true,

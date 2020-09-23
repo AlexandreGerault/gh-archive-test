@@ -54,18 +54,18 @@ class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
             $dbEvent = $this->eventRepository->findOrCreate($event);
             $this->em->persist($dbEvent);
 
-            $actor = $this->actorRepository->createFromEventIfNotExists($event);
+            $actor = $this->actorRepository->createFromEventIfNotExists($event, $dbEvent);
             if ($actor) {
                 $this->em->persist($actor);
             }
 
-            $repo = $this->repoRepository->createFromEventIfNotExists($event);
+            $repo = $this->repoRepository->createFromEventIfNotExists($event, $dbEvent);
             if ($repo) {
                 $this->em->persist($repo);
             }
 
             if (isset($event->org)) {
-                $org = $this->organizationRepository->createFromEventIfNotExists($event);
+                $org = $this->organizationRepository->createFromEventIfNotExists($event, $dbEvent);
                 if ($org) {
                     $this->em->persist($org);
                 }

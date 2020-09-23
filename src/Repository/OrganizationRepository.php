@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Event;
 use App\Entity\Organization;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -19,7 +20,7 @@ class OrganizationRepository extends ServiceEntityRepository
         parent::__construct($registry, Organization::class);
     }
 
-    public function createFromEventIfNotExists($event)
+    public function createFromEventIfNotExists($event, Event $doctrineEvent)
     {
         $o = $this->find($event->actor->id);
 
@@ -30,7 +31,7 @@ class OrganizationRepository extends ServiceEntityRepository
                 ->setGravatarId($event->org->gravatar_id !== "" ? $event->org->gravatar_id : null)
                 ->setUrl($event->org->url)
                 ->setAvatarUrl($event->org->avatar_url)
-                ->setEvent($event->org->id);
+                ->setEvent($doctrineEvent);
         }
 
         return null;
