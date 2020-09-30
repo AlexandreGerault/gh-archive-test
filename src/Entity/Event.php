@@ -4,8 +4,6 @@ namespace App\Entity;
 
 use App\Repository\EventRepository;
 use DateTimeInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -35,31 +33,25 @@ class Event
     private $created_at;
 
     /**
-     * @ORM\OneToMany(targetEntity=Actor::class, mappedBy="event")
-     */
-    private $actor;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Repo::class, mappedBy="event")
-     */
-    private $repo;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Organization::class, mappedBy="event")
-     */
-    private $organization;
-
-    /**
      * @ORM\Column(type="json")
      */
     private $payload = [];
 
-    public function __construct()
-    {
-        $this->actor = new ArrayCollection();
-        $this->repo = new ArrayCollection();
-        $this->organization = new ArrayCollection();
-    }
+    /**
+     * @ORM\ManyToOne(targetEntity=Actor::class, inversedBy="events")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $actor;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="events")
+     */
+    private $organization;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Repo::class, inversedBy="events")
+     */
+    private $repo;
 
     public function getId(): ?int
     {
@@ -109,99 +101,6 @@ class Event
         return $this;
     }
 
-    /**
-     * @return Collection|Actor[]
-     */
-    public function getActor(): Collection
-    {
-        return $this->actor;
-    }
-
-    public function addActor(Actor $actor): self
-    {
-        if (!$this->actor->contains($actor)) {
-            $this->actor[] = $actor;
-            $actor->setEvent($this);
-        }
-
-        return $this;
-    }
-
-    public function removeActor(Actor $actor): self
-    {
-        if ($this->actor->contains($actor)) {
-            $this->actor->removeElement($actor);
-            // set the owning side to null (unless already changed)
-            if ($actor->getEvent() === $this) {
-                $actor->setEvent(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Repo[]
-     */
-    public function getRepo(): Collection
-    {
-        return $this->repo;
-    }
-
-    public function addRepo(Repo $repo): self
-    {
-        if (!$this->repo->contains($repo)) {
-            $this->repo[] = $repo;
-            $repo->setEvent($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRepo(Repo $repo): self
-    {
-        if ($this->repo->contains($repo)) {
-            $this->repo->removeElement($repo);
-            // set the owning side to null (unless already changed)
-            if ($repo->getEvent() === $this) {
-                $repo->setEvent(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Organization[]
-     */
-    public function getOrganization(): Collection
-    {
-        return $this->organization;
-    }
-
-    public function addOrganization(Organization $organization): self
-    {
-        if (!$this->organization->contains($organization)) {
-            $this->organization[] = $organization;
-            $organization->setEvent($this);
-        }
-
-        return $this;
-    }
-
-    public function removeOrganization(Organization $organization): self
-    {
-        if ($this->organization->contains($organization)) {
-            $this->organization->removeElement($organization);
-            // set the owning side to null (unless already changed)
-            if ($organization->getEvent() === $this) {
-                $organization->setEvent(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getPayload(): ?array
     {
         return $this->payload;
@@ -210,6 +109,42 @@ class Event
     public function setPayload(array $payload): self
     {
         $this->payload = $payload;
+
+        return $this;
+    }
+
+    public function getActor(): ?Actor
+    {
+        return $this->actor;
+    }
+
+    public function setActor(?Actor $actor): self
+    {
+        $this->actor = $actor;
+
+        return $this;
+    }
+
+    public function getOrganization(): ?Organization
+    {
+        return $this->organization;
+    }
+
+    public function setOrganization(?Organization $organization): self
+    {
+        $this->organization = $organization;
+
+        return $this;
+    }
+
+    public function getRepo(): ?Repo
+    {
+        return $this->repo;
+    }
+
+    public function setRepo(?Repo $repo): self
+    {
+        $this->repo = $repo;
 
         return $this;
     }

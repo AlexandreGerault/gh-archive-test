@@ -2,7 +2,6 @@
 
 namespace App\Repository;
 
-use App\Entity\Event;
 use App\Entity\Organization;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -20,20 +19,17 @@ class OrganizationRepository extends ServiceEntityRepository
         parent::__construct($registry, Organization::class);
     }
 
-    public function createFromEventIfNotExists($event, Event $doctrineEvent)
+    public function getOrCreateFromEvent($event)
     {
         $o = $this->find($event->actor->id);
 
-        if (!$o) {
-            return (new Organization())
-                ->setId($event->org->id)
-                ->setLogin($event->org->login)
-                ->setGravatarId($event->org->gravatar_id !== "" ? $event->org->gravatar_id : null)
-                ->setUrl($event->org->url)
-                ->setAvatarUrl($event->org->avatar_url)
-                ->setEvent($doctrineEvent);
-        }
+        if ($o) return $o;
 
-        return null;
+        else return (new Organization())
+            ->setId($event->org->id)
+            ->setLogin($event->org->login)
+            ->setGravatarId($event->org->gravatar_id !== "" ? $event->org->gravatar_id : null)
+            ->setUrl($event->org->url)
+            ->setAvatarUrl($event->org->avatar_url);
     }
 }

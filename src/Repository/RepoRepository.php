@@ -2,7 +2,6 @@
 
 namespace App\Repository;
 
-use App\Entity\Event;
 use App\Entity\Repo;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -20,18 +19,15 @@ class RepoRepository extends ServiceEntityRepository
         parent::__construct($registry, Repo::class);
     }
 
-    public function createFromEventIfNotExists($event, Event $doctrineEvent): ?Repo
+    public function getOrCreateFromEvent($event): ?Repo
     {
         $r = $this->find($event->repo->id);
 
-        if (!$r) {
-            return (new Repo())
-                ->setId($event->repo->id)
-                ->setEvent($doctrineEvent)
-                ->setUrl($event->repo->url)
-                ->setName($event->repo->name);
-        }
+        if ($r) return $r;
 
-        return null;
+        else return (new Repo())
+            ->setId($event->repo->id)
+            ->setUrl($event->repo->url)
+            ->setName($event->repo->name);
     }
 }

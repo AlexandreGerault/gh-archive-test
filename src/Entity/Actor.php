@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ActorRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -37,9 +39,14 @@ class Actor
     private $avatar_url;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Event::class, inversedBy="actor")
+     * @ORM\OneToMany(targetEntity=Event::class, mappedBy="actor")
      */
-    private $event;
+    private $events;
+
+    public function __construct()
+    {
+        $this->events = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -101,15 +108,34 @@ class Actor
         return $this;
     }
 
-    public function getEvent(): ?Event
+    public function addEvent(Event $event): self
     {
-        return $this->event;
-    }
-
-    public function setEvent(?Event $event): self
-    {
-        $this->event = $event;
+        if (!$this->events->contains($event)) {
+            $this->events[] = $event;
+            $event->setActor($this);
+        }
 
         return $this;
+    }
+
+    public function removeEvent(Event $event): self
+    {
+        if ($this->events->contains($event)) {
+            $this->events->removeElement($event);
+            // set the owning side to null (unless already changed)
+            if ($event->getActor() === $this) {
+                $event->setActor(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Event[]
+     */
+    public function getEvents(): Collection
+    {
+        return $this->events;
     }
 }

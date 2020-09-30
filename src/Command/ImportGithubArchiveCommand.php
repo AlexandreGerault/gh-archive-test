@@ -81,7 +81,6 @@ class ImportGithubArchiveCommand extends Command
             $this->archiveImporter->import($events);
 
             $progressBar->advance();
-            $io->writeln(" Hour " . $i . " imported.");
         }
         $endTime = new DateTime();
         $elapsed = $endTime->diff($startTime, true);

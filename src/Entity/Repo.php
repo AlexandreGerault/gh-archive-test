@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\RepoRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -27,9 +29,19 @@ class Repo
     private $url;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Event::class, inversedBy="repo")
+     * @ORM\ManyToOne(targetEntity=Event::class, inversedBy="repos")
      */
     private $event;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Event::class, mappedBy="repo")
+     */
+    private $events;
+
+    public function __construct()
+    {
+        $this->events = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -75,6 +87,37 @@ class Repo
     public function setEvent(?Event $event): self
     {
         $this->event = $event;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Event[]
+     */
+    public function getEvents(): Collection
+    {
+        return $this->events;
+    }
+
+    public function addEvent(Event $event): self
+    {
+        if (!$this->events->contains($event)) {
+            $this->events[] = $event;
+            $event->setRepo($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEvent(Event $event): self
+    {
+        if ($this->events->contains($event)) {
+            $this->events->removeElement($event);
+            // set the owning side to null (unless already changed)
+            if ($event->getRepo() === $this) {
+                $event->setRepo(null);
+            }
+        }
 
         return $this;
     }

@@ -51,27 +51,33 @@ class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
         $i = 1;
         $batchSize = 10000;
         foreach ($events as $event) {
-            $dbEvent = $this->eventRepository->findOrCreate($event);
-            $this->em->persist($dbEvent);
+            $dbEvent = $this->eventRepository->createIfNotExistsOrNull($event);
 
-            $actor = $this->actorRepository->createFromEventIfNotExists($event, $dbEvent);
+            if (!$dbEvent) {
+                continue;
+            }
+
+            $actor = $this->actorRepository->getOrCreateFromEvent($event);
             if ($actor) {
                 $this->em->persist($actor);
             }
+            $dbEvent->setActor($actor);
 
-            $repo = $this->repoRepository->createFromEventIfNotExists($event, $dbEvent);
+            $repo = $this->repoRepository->getOrCreateFromEvent($event);
             if ($repo) {
                 $this->em->persist($repo);
             }
+            $dbEvent->setRepo($repo);
 
             if (isset($event->org)) {
-                $org = $this->organizationRepository->createFromEventIfNotExists($event, $dbEvent);
+                $org = $this->organizationRepository->getOrCreateFromEvent($event);
                 if ($org) {
                     $this->em->persist($org);
                 }
+                $dbEvent->setOrganization($org);
             }
 
-            // Organization missing
+            $this->em->persist($dbEvent);
 
             if ($i % $batchSize === 0) {
                 $this->em->flush();

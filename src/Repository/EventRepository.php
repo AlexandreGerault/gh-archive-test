@@ -22,15 +22,13 @@ class EventRepository extends ServiceEntityRepository
         parent::__construct($registry, Event::class);
     }
 
-    public function findOrCreate($event): Event
+    public function createIfNotExistsOrNull($event): ?Event
     {
         $e = $this->find($event->id);
 
-        if ($e) {
-            return $e;
-        }
+        if ($e) return null;
 
-        return (new Event())
+        else return (new Event())
             ->setId($event->id)
             ->setType($event->type)
             ->setPayload(json_decode(json_encode($event->payload), true))
