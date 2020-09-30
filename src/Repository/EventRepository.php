@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Event;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,37 +15,29 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class EventRepository extends ServiceEntityRepository
 {
+    private const GITHUB_EVENT_DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Event::class);
     }
 
-    // /**
-    //  * @return Event[] Returns an array of Event objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function createIfNotExistsOrNull($event): ?Event
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('e.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $e = $this->find($event->id);
 
-    /*
-    public function findOneBySomeField($value): ?Event
-    {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if ($e) return null;
+
+        else return (new Event())
+            ->setId($event->id)
+            ->setType($event->type)
+            ->setPayload(json_decode(json_encode($event->payload), true))
+            ->setPublic($event->public)
+            ->setCreatedAt(
+                DateTime::createFromFormat(
+                    self::GITHUB_EVENT_DATETIME_FORMAT,
+                    $event->created_at
+                )
+            );
     }
-    */
 }

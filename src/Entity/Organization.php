@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\OrganizationRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -12,8 +14,7 @@ class Organization
 {
     /**
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="bigint")
      */
     private $id;
 
@@ -38,14 +39,27 @@ class Organization
     private $avatar_url;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Event::class, inversedBy="organization")
+     * @ORM\OneToMany(targetEntity=Event::class, mappedBy="organization")
      */
-    private $event;
+    private $events;
+
+    public function __construct()
+    {
+        $this->events = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
         return $this->id;
     }
+
+    public function setId($id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
 
     public function getLogin(): ?string
     {
@@ -95,14 +109,33 @@ class Organization
         return $this;
     }
 
-    public function getEvent(): ?Event
+    /**
+     * @return Collection|Event[]
+     */
+    public function getEvents(): Collection
     {
-        return $this->event;
+        return $this->events;
     }
 
-    public function setEvent(?Event $event): self
+    public function addEvent(Event $event): self
     {
-        $this->event = $event;
+        if (!$this->events->contains($event)) {
+            $this->events[] = $event;
+            $event->setOrganization($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEvent(Event $event): self
+    {
+        if ($this->events->contains($event)) {
+            $this->events->removeElement($event);
+            // set the owning side to null (unless already changed)
+            if ($event->getOrganization() === $this) {
+                $event->setOrganization(null);
+            }
+        }
 
         return $this;
     }

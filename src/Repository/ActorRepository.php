@@ -19,32 +19,17 @@ class ActorRepository extends ServiceEntityRepository
         parent::__construct($registry, Actor::class);
     }
 
-    // /**
-    //  * @return Actor[] Returns an array of Actor objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function getOrCreateFromEvent($event): ?Actor
     {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('a.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $a = $this->find($event->actor->id);
 
-    /*
-    public function findOneBySomeField($value): ?Actor
-    {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if ($a) return $a;
+
+        else return (new Actor())
+            ->setId($event->actor->id)
+            ->setLogin($event->actor->login)
+            ->setGravatarId($event->actor->gravatar_id !== "" ? $event->actor->gravatar_id : null)
+            ->setUrl($event->actor->url)
+            ->setAvatarUrl($event->actor->avatar_url);
     }
-    */
 }
