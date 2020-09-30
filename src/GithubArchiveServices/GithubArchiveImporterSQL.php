@@ -58,22 +58,16 @@ class GithubArchiveImporterSQL implements GithubArchiveImporterInterface
             }
 
             $actor = $this->actorRepository->getOrCreateFromEvent($event);
-            if ($actor) {
-                $this->em->persist($actor);
-            }
+            $this->em->persist($actor);
             $dbEvent->setActor($actor);
 
             $repo = $this->repoRepository->getOrCreateFromEvent($event);
-            if ($repo) {
-                $this->em->persist($repo);
-            }
+            $this->em->persist($repo);
             $dbEvent->setRepo($repo);
 
             if (isset($event->org)) {
                 $org = $this->organizationRepository->getOrCreateFromEvent($event);
-                if ($org) {
-                    $this->em->persist($org);
-                }
+                $this->em->persist($org);
                 $dbEvent->setOrganization($org);
             }
 

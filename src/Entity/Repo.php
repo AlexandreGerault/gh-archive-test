@@ -29,11 +29,6 @@ class Repo
     private $url;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Event::class, inversedBy="repos")
-     */
-    private $event;
-
-    /**
      * @ORM\OneToMany(targetEntity=Event::class, mappedBy="repo")
      */
     private $events;
@@ -75,18 +70,6 @@ class Repo
     public function setUrl(string $url): self
     {
         $this->url = $url;
-
-        return $this;
-    }
-
-    public function getEvent(): ?Event
-    {
-        return $this->event;
-    }
-
-    public function setEvent(?Event $event): self
-    {
-        $this->event = $event;
 
         return $this;
     }

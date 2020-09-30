@@ -19,9 +19,9 @@ class OrganizationRepository extends ServiceEntityRepository
         parent::__construct($registry, Organization::class);
     }
 
-    public function getOrCreateFromEvent($event)
+    public function getOrCreateFromEvent($event): ?Organization
     {
-        $o = $this->find($event->actor->id);
+        $o = $this->find($event->org->id);
 
         if ($o) return $o;
 
